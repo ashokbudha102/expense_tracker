@@ -1,0 +1,23 @@
+{% extends 'main/base.html' %}
+{% load django_tables2%}
+{% block content %}
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+        {% endfor %}
+</ul>
+{% endif %}
+
+    <script>
+        $(document).ready(function () {
+            $('.datepicker').datepicker();
+        });
+    </script>
+        <form method="GET">
+            {% csrf_token %}
+            {{form.as_p}}
+                <button type="submit">Submit</button>
+        </form>
+        <a href="{% export_url "csv" %}">Download</a>
+{% endblock %}
