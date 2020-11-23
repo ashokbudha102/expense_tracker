@@ -3,26 +3,75 @@
 {% load static %}
 {% load django_tables2 %}
 {% block content1 %}
-    <small>Username:<b>{{user}}</b><br>
-    Today's Date: <b>{{datetime}}</b></small>
+<i class="fa fa-user" style="font-size:36px"></i>
 
+    <small><b>{{user}}</b><br>
 {% endblock content1 %}
 {% block content %}
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li id="message_container" class="{{ message.tags }}">{{ message }}</li>
+    <script>
+        var message_ele = document.getElementById("message_container");
+
+        setTimeout(function () {
+            message_ele.style.display = "none";
+        }, 10000);
+    </script>
+    {% endfor %}
+</ul>
+{% endif %}
+
+
+
 <h4>Expenditure Report </h4>
 <br>
-<div class='flex-container'>
-    <div class='flex1'>
-<form method='GET'>
-{{form}}
-<button type='submit'>Submit</button>
-</form>
+    <script>
+        $(document).ready(function () {
+            $('.datepicker').datepicker();
+        });
+    </script>
+
+    <div class='row'>
+    <a href="#modalCenter" data-toggle="modal" class='btn'><i class="fa fa-plus"></i> <strong>ADD</strong></a>
+<a href="#" class="btn"><i class="fa fa-download"></i> <strong>Download</strong></a>
+<a href="#" class="btn"><i class="icon-trash"></i> <strong>Delete</strong></a>
+<a href="#" class="btn"><i class="icon-align-justify"></i> <strong>List</strong></a>
 </div>
-<div class='flex2'>
-    hello 
+    <!-- Modal HTML -->
+    <div id="modalCenter" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="p-3 mb-2 bg-secondary text-white">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Expenses</h5>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body" color='grey'>
+
+
+                        <form method="POST">
+                            {% csrf_token %}
+                            {{form.as_p}}
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </div>
 
        <hr>
         {% render_table table %}
         <small>Note:<strong>Try clicking the table field to sort that field.</strong></small>
+            
         {% endblock content %}
+
+
+
+
+

@@ -1,44 +1,40 @@
 from django.shortcuts import render
 from .tables import expenseTable
-from .models import Expense
+from .models import Expense,ExpenseCategory
 from django.urls import reverse
-import datetime
 from django.contrib import messages
-from .forms import downloadForm
+import datetime
+from django.shortcuts import reverse
+from .forms import downloadForm, ExpenseForm
 from django.shortcuts import redirect
 from django_tables2.export.export import TableExport
-# from .filters import FilteredView 
+from .filters import ExpenseFilter
 from django_tables2.config import RequestConfig
-from django.views.generic import DeleteView, CreateView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 @login_required
 def home_view(request):
     current_user=request.user
-    form=downloadForm()
-    table=expenseTable(Expense.objects.filter(addedBy=current_user))
+    table = expenseTable(Expense.objects.filter(addedBy=current_user))
     RequestConfig(request, paginate={"per_page": 8}).configure(table)
-    return render(request, 'main/home.html',{'table':table,'user':current_user,'datetime':datetime.datetime.today,'form':form})
+    expForm=ExpenseForm()
+    if request.method=='POST':
+        expForm=ExpenseForm(request.POST)
+        if expForm.is_valid():
+            expForm.instance.addedBy=request.user
+            expForm.save()
+            expForm=ExpenseForm()
+            messages.success(request,'Expense added successfully !!')
+            return redirect('home')
+    return render(request, 'main/home.html',{'table':table,'user':current_user,'form':expForm})
 
-class homeCreateView(CreateView, LoginRequiredMixin):
-    model=Expense
-    success_url = "/"
-    fields=['description','amount','date','category']
-    def form_valid(self, form):
-        form.instance.addedBy=self.request.user
-        form.save()
-        return super().form_valid(form)
-    def test_func(self):
-        expense = self.get_object()
-        if self.request.user == expense.addedBy:
-            return True
-        return False
-    def get_absolute_url(self):
-        return redirect()
+@login_required
+def delete_item(request, pk):
+    Expense.objects.filter(id=pk).delete()
+    items=Expense.objects.filter(addedBy=request.user)
+    context={"items":items}
+    messages.success(request,'Item deleted successfully')
+    return redirect(reverse('home'))
 
-class expenseDeleteView(LoginRequiredMixin, DeleteView):
-    model=Expense
-    success_url='/'
 
 @login_required
 def downloadView(request):
@@ -61,4 +57,9 @@ def downloadView(request):
 
     return render(request, 'main/down.html',{'form':downForm,'table':table})
             
+
+@login_required
+def summary(request):
+    current=ExpenseCategory.objects.all()
+    return render(request,'main/summary.html',{'current':current})
 
